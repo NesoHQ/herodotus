@@ -1,15 +1,16 @@
-.PHONY: help build run dev test clean docker-build docker-up docker-down
+.PHONY: help build run dev test clean docker-build docker-up docker-down docker-rebuild
 
 help:
 	@echo "Available commands:"
-	@echo "  make build        - Build the application"
-	@echo "  make run          - Run the application"
-	@echo "  make dev          - Run with hot reload"
-	@echo "  make test         - Run tests"
-	@echo "  make clean        - Clean build artifacts"
-	@echo "  make docker-build - Build Docker image"
-	@echo "  make docker-up    - Start Docker containers"
-	@echo "  make docker-down  - Stop Docker containers"
+	@echo "  make build         - Build the application"
+	@echo "  make run           - Run the application"
+	@echo "  make dev           - Run with hot reload"
+	@echo "  make test          - Run tests"
+	@echo "  make clean         - Clean build artifacts"
+	@echo "  make docker-build  - Build Docker image"
+	@echo "  make docker-up     - Start Docker containers"
+	@echo "  make docker-down   - Stop Docker containers"
+	@echo "  make docker-rebuild- Rebuild containers without cache"
 
 build:
 	go build -o server ./cmd/main.go
@@ -35,3 +36,7 @@ docker-up:
 
 docker-down:
 	docker compose down
+
+docker-rebuild:
+	docker compose build --no-cache
+	docker compose up -d
