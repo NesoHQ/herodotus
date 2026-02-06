@@ -39,8 +39,8 @@ jobs:
         working-directory: ./frontend
         run: yarn build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8080
-          NEXT_PUBLIC_FRONTEND_URL: http://localhost:3000
+          NEXT_PUBLIC_API_URL: https://api.krakens.nesohq.org
+          NEXT_PUBLIC_FRONTEND_URL: https://krakens.nesohq.org
 
   docker:
     name: Build & Push Docker Image
