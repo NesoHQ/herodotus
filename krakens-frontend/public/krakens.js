@@ -6,7 +6,19 @@
   'use strict';
 
   const config = {
-    apiUrl: 'http://localhost:8080/api/track',
+    apiUrl: window.KRAKENS_API_URL || (function() {
+      // Auto-detect API URL from script source or use relative path
+      const scripts = document.getElementsByTagName('script');
+      for (let i = 0; i < scripts.length; i++) {
+        const src = scripts[i].src;
+        if (src && src.includes('krakens.js')) {
+          const url = new URL(src);
+          // Try to construct API URL from frontend URL
+          return `${url.protocol}//${url.hostname}${url.port && url.port !== '80' && url.port !== '443' ? ':8080' : ''}/api/track`;
+        }
+      }
+      return '/api/track'; // Fallback to relative URL (works with reverse proxy)
+    })(),
     apiKey: null,
     visitorId: null,
   };

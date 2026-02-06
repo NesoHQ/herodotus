@@ -78,8 +78,12 @@ export default function APIKeysPage() {
   };
 
   const getInstallCode = (apiKey: string) => {
+    const scriptUrl = process.env.NEXT_PUBLIC_FRONTEND_URL 
+      ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/krakens.js`
+      : `${window.location.origin}/krakens.js`;
+    
     return `<!-- Krakens Analytics -->
-<script src="http://localhost:3000/krakens.js"></script>
+<script src="${scriptUrl}"></script>
 <script>
   Krakens.init('${apiKey}');
 </script>`;
@@ -348,7 +352,7 @@ export default function APIKeysPage() {
                 </p>
                 <Card className="bg-gray-900 text-gray-100 p-4 overflow-x-auto">
                   <pre className="text-sm"><code>{`<!-- Krakens Analytics -->
-<script src="http://localhost:3000/krakens.js"></script>
+<script src="${process.env.NEXT_PUBLIC_FRONTEND_URL || window.location.origin}/krakens.js"></script>
 <script>
   Krakens.init('YOUR_API_KEY_HERE');
 </script>`}</code></pre>
