@@ -33,67 +33,49 @@ export default function FrameworkInstructionsModal({
       icon: '⚡',
       steps: [
         {
-          title: '1. Add the Script to your Root Layout',
-          description: '⚠️ IMPORTANT: Add the exact script below to your app/layout.tsx file. The order and structure must match exactly.',
-          code: `// app/layout.tsx
-import Script from 'next/script';
+          title: '1. Create Analytics Component',
+          description: '⚠️ IMPORTANT: Create this exact component file',
+          code: `// components/krakens-analytics.tsx
+'use client';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import { useEffect } from 'react';
+
+export default function KrakensAnalytics() {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Krakens) {
+      window.Krakens.init('${apiKey.key}');
+    }
+  }, []);
+
   return (
-    <html lang="en">
-      <body>
-        {/* Krakens Analytics */}
-        <Script 
-          src="${frontendUrl}/krakens.js"
-          strategy="afterInteractive"
-        />
-        <Script id="krakens-init" strategy="afterInteractive">
-          {\`Krakens.init('${apiKey.key}');\`}
-        </Script>
-        
-        {children}
-      </body>
-    </html>
+    <script 
+      src="${frontendUrl}/krakens.js"
+      async
+    />
   );
 }`,
           important: true,
         },
         {
-          title: '2. Alternative: Pages Directory',
-          description: 'If you\'re using the pages directory, add to _app.tsx',
-          code: `// pages/_app.tsx
-import Script from 'next/script';
-import type { AppProps } from 'next/app';
+          title: '2. Add to Root Layout',
+          description: 'Import and use the component in your app/layout.tsx',
+          code: `// app/layout.tsx
+import KrakensAnalytics from '@/components/krakens-analytics';
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function RootLayout({ children }) {
   return (
-    <>
-      <Script 
-        src="${frontendUrl}/krakens.js"
-        strategy="afterInteractive"
-      />
-      <Script id="krakens-init" strategy="afterInteractive">
-        {\`Krakens.init('${apiKey.key}');\`}
-      </Script>
-      
-      <Component {...pageProps} />
-    </>
+    <html lang="en">
+      <body>
+        <KrakensAnalytics />
+        {children}
+      </body>
+    </html>
   );
 }`,
         },
         {
-          title: '3. Verify Installation',
-          description: 'Check your browser console for confirmation',
-          code: `// You should see:
-// ✅ Krakens Analytics initialized`,
-        },
-        {
-          title: '4. Test Tracking',
-          description: 'Navigate through your site and check the dashboard for real-time data',
+          title: '3. Verify',
+          description: 'Check console for: ✅ Krakens Analytics initialized',
         },
       ],
     },
@@ -103,51 +85,22 @@ export default function App({ Component, pageProps }: AppProps) {
       steps: [
         {
           title: '1. Add Script to index.html',
-          description: 'Add the tracking script to your public/index.html file',
+          description: 'Add to public/index.html in the <head> section',
           code: `<!-- public/index.html -->
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Your App</title>
-    
-    <!-- Krakens Analytics -->
-    <script src="${frontendUrl}/krakens.js"></script>
-    <script>
-      window.addEventListener('load', function() {
-        Krakens.init('${apiKey.key}');
-      });
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>`,
+<head>
+  <script src="${frontendUrl}/krakens.js" async></script>
+  <script>
+    window.addEventListener('load', () => {
+      if (window.Krakens) {
+        window.Krakens.init('${apiKey.key}');
+      }
+    });
+  </script>
+</head>`,
         },
         {
-          title: '2. Alternative: Use React Helmet',
-          description: 'For dynamic script loading with React Helmet',
-          code: `import { Helmet } from 'react-helmet';
-
-function App() {
-  return (
-    <>
-      <Helmet>
-        <script src="${frontendUrl}/krakens.js" />
-        <script>
-          {\`Krakens.init('${apiKey.key}');\`}
-        </script>
-      </Helmet>
-      {/* Your app content */}
-    </>
-  );
-}`,
-        },
-        {
-          title: '3. Verify Installation',
-          description: 'Check browser console for confirmation message',
-          code: `// You should see:
-// ✅ Krakens Analytics initialized`,
+          title: '2. Verify',
+          description: 'Check console for: ✅ Krakens Analytics initialized',
         },
       ],
     },
@@ -157,25 +110,15 @@ function App() {
       steps: [
         {
           title: '1. Add Script to index.html',
-          description: 'Add the tracking script to your public/index.html file',
+          description: 'Add to public/index.html in the <head> section',
           code: `<!-- public/index.html -->
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Your App</title>
-    
-    <!-- Krakens Analytics -->
-    <script src="${frontendUrl}/krakens.js"></script>
-  </head>
-  <body>
-    <div id="app"></div>
-  </body>
-</html>`,
+<head>
+  <script src="${frontendUrl}/krakens.js" async></script>
+</head>`,
         },
         {
           title: '2. Initialize in main.js',
-          description: 'Initialize Krakens in your main application file',
+          description: 'Add initialization after mounting your app',
           code: `// src/main.js
 import { createApp } from 'vue';
 import App from './App.vue';
@@ -183,35 +126,16 @@ import App from './App.vue';
 const app = createApp(App);
 app.mount('#app');
 
-// Initialize Krakens after mount
+// Initialize Krakens
 window.addEventListener('load', () => {
-  Krakens.init('${apiKey.key}');
+  if (window.Krakens) {
+    window.Krakens.init('${apiKey.key}');
+  }
 });`,
         },
         {
-          title: '3. Alternative: Use Vue Plugin',
-          description: 'Create a Vue plugin for cleaner integration',
-          code: `// src/plugins/krakens.js
-export default {
-  install: (app) => {
-    window.addEventListener('load', () => {
-      if (typeof window.Krakens !== 'undefined') {
-        window.Krakens.init('${apiKey.key}');
-        console.log('✅ Krakens Analytics initialized');
-      }
-    });
-  }
-};
-
-// In main.js
-import krakensPlugin from './plugins/krakens';
-app.use(krakensPlugin);`,
-        },
-        {
-          title: '4. Verify Installation',
-          description: 'Check browser console for confirmation message',
-          code: `// You should see:
-// ✅ Krakens Analytics initialized`,
+          title: '3. Verify',
+          description: 'Check console for: ✅ Krakens Analytics initialized',
         },
       ],
     },
@@ -287,10 +211,10 @@ app.use(krakensPlugin);`,
                 <span className="text-2xl">⚠️</span>
                 <div>
                   <h4 className="font-bold text-orange-900 dark:text-orange-200 mb-1">
-                    Critical: Exact Implementation Required
+                    Important: Use Component Approach
                   </h4>
                   <p className="text-sm text-orange-800 dark:text-orange-300">
-                    The script in Step 1 must be implemented exactly as shown. The order, structure, and syntax are critical for proper tracking initialization.
+                    Create the component exactly as shown in Step 1. This prevents script loading issues.
                   </p>
                 </div>
               </div>
@@ -336,13 +260,12 @@ app.use(krakensPlugin);`,
           <div className="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-lg">
             <h4 className="font-semibold mb-2 flex items-center">
               <span className="mr-2">💡</span>
-              Pro Tips
+              Quick Tips
             </h4>
             <ul className="text-sm text-muted-foreground space-y-1 ml-6 list-disc">
-              <li>The tracking script is lightweight (less than 5KB)</li>
-              <li>It automatically tracks page views and user interactions</li>
-              <li>All data is anonymized and GDPR-compliant</li>
-              <li>Check your dashboard for real-time analytics</li>
+              <li>Lightweight script (less than 5KB)</li>
+              <li>Auto-tracks page views</li>
+              <li>GDPR-compliant with IP anonymization</li>
             </ul>
           </div>
         </div>
