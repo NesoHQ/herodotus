@@ -322,7 +322,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-success">
-                  {(realtimeStats?.hits_per_minute?.reduce((sum, item) => sum + item.hits, 0) / 60).toFixed(1)}
+                  {((realtimeStats?.hits_per_minute?.reduce((sum, item) => sum + item.hits, 0) || 0) / 60).toFixed(1)}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">Avg per Minute</div>
               </div>
