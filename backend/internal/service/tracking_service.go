@@ -82,11 +82,14 @@ func (s *TrackingService) GetRealtimeStats(ctx context.Context, domainID primiti
 		fmt.Sscanf(activeStr, "%d", &activeVisitors)
 	}
 
-	// Get recent events
+	// Get recent events (last 60 minutes)
 	events, err := s.eventRepo.GetRecentEvents(ctx, domainID, 60)
 	if err != nil {
 		return nil, err
 	}
+
+	// Debug: Log event count
+	fmt.Printf("Found %d events in last 60 minutes for domain %s\n", len(events), domainID.Hex())
 
 	// Aggregate stats
 	stats := &domain.RealtimeStats{
@@ -97,6 +100,44 @@ func (s *TrackingService) GetRealtimeStats(ctx context.Context, domainID primiti
 		Countries:      make(map[string]int),
 		Devices:        make(map[string]int),
 		Browsers:       make(map[string]int),
+	}
+
+	// Calculate hits per minute for the last 60 minutes
+	now := time.Now().UTC()
+	hitsPerMinuteMap := make(map[string]int)
+
+	// Initialize all 60 minutes with 0 hits
+	for i := 59; i >= 0; i-- {
+		minuteTime := now.Add(-time.Duration(i) * time.Minute)
+		minuteKey := minuteTime.Format("15:04")
+		hitsPerMinuteMap[minuteKey] = 0
+	}
+
+	// Count hits per minute from events
+	for _, event := range events {
+		minuteKey := event.Timestamp.UTC().Format("15:04")
+		hitsPerMinuteMap[minuteKey]++
+	}
+
+	// Debug: Show first few minute keys with hits
+	fmt.Printf("Sample minute keys with hits:\n")
+	count := 0
+	for key, hits := range hitsPerMinuteMap {
+		if hits > 0 && count < 5 {
+			fmt.Printf("  %s: %d hits\n", key, hits)
+			count++
+		}
+	}
+	fmt.Printf("Current time (UTC): %s\n", now.Format("15:04"))
+
+	// Convert to sorted slice
+	for i := 59; i >= 0; i-- {
+		minuteTime := now.Add(-time.Duration(i) * time.Minute)
+		minuteKey := minuteTime.Format("15:04")
+		stats.HitsPerMinute = append(stats.HitsPerMinute, domain.HitsPerMinute{
+			Minute: minuteKey,
+			Hits:   hitsPerMinuteMap[minuteKey],
+		})
 	}
 
 	// Aggregate data

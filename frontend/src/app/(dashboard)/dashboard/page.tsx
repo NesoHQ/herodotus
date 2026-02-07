@@ -66,6 +66,29 @@ export default function DashboardPage() {
         getRealtimeStats(selectedDomain),
         getOverviewStats(selectedDomain),
       ]);
+      
+      // Convert UTC times to local timezone
+      if (realtime.data?.hits_per_minute) {
+        realtime.data.hits_per_minute = realtime.data.hits_per_minute.map(item => {
+          // Parse the UTC time and convert to local
+          const [hours, minutes] = item.minute.split(':');
+          const utcDate = new Date();
+          utcDate.setUTCHours(parseInt(hours), parseInt(minutes), 0, 0);
+          
+          // Format in local time
+          const localTime = utcDate.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          });
+          
+          return {
+            ...item,
+            minute: localTime
+          };
+        });
+      }
+      
       setRealtimeStats(realtime.data);
       setOverviewStats(overview.data);
     } catch (error) {
@@ -195,54 +218,122 @@ export default function DashboardPage() {
       </div>
 
       {/* Traffic Chart */}
-      <Card className="p-6">
+      <Card className="p-6 bg-gradient-to-br from-card to-card/50 backdrop-blur">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold">Traffic Overview</h2>
-            <p className="text-sm text-muted-foreground">Page views per minute (last 60 minutes)</p>
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <span className="text-2xl">📈</span>
+              Traffic Overview
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">Page views per minute (last 60 minutes)</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
-            <span className="text-sm text-muted-foreground">Live</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+              <span className="text-xs font-medium text-primary">Live</span>
+            </div>
           </div>
         </div>
         {(realtimeStats?.hits_per_minute?.length || 0) > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={realtimeStats?.hits_per_minute || []}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis 
-                dataKey="minute" 
-                className="text-muted-foreground"
-                style={{ fontSize: '12px' }}
-              />
-              <YAxis 
-                className="text-muted-foreground"
-                style={{ fontSize: '12px' }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  color: 'hsl(var(--foreground))'
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="hits" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={3}
-                dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="relative">
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart 
+                data={realtimeStats?.hits_per_minute || []}
+                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+              >
+                <defs>
+                  <linearGradient id="colorHits" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  className="stroke-border/50" 
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="minute" 
+                  className="text-muted-foreground"
+                  style={{ fontSize: '11px' }}
+                  tickLine={false}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  interval="preserveStartEnd"
+                  minTickGap={50}
+                />
+                <YAxis 
+                  className="text-muted-foreground"
+                  style={{ fontSize: '11px' }}
+                  tickLine={false}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  allowDecimals={false}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 40px -10px rgba(0, 0, 0, 0.2)',
+                    color: 'hsl(var(--popover-foreground))',
+                    padding: '12px 16px'
+                  }}
+                  labelStyle={{ 
+                    fontWeight: 600,
+                    marginBottom: '4px',
+                    color: 'hsl(var(--foreground))'
+                  }}
+                  itemStyle={{
+                    color: 'hsl(var(--primary))',
+                    fontWeight: 500
+                  }}
+                  cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '5 5' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="hits" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ 
+                    r: 6, 
+                    fill: 'hsl(var(--primary))',
+                    stroke: 'hsl(var(--background))',
+                    strokeWidth: 3
+                  }}
+                  fill="url(#colorHits)"
+                  animationDuration={1000}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            
+            {/* Stats Summary Below Chart */}
+            <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border/50">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {realtimeStats?.hits_per_minute?.reduce((sum, item) => sum + item.hits, 0) || 0}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">Total Hits (60min)</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-accent">
+                  {Math.max(...(realtimeStats?.hits_per_minute?.map(item => item.hits) || [0]))}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">Peak Traffic</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success">
+                  {(realtimeStats?.hits_per_minute?.reduce((sum, item) => sum + item.hits, 0) / 60).toFixed(1)}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">Avg per Minute</div>
+              </div>
+            </div>
+          </div>
         ) : (
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
+          <div className="h-96 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-4xl mb-2">📊</div>
-              <p>No traffic data yet</p>
+              <div className="text-6xl mb-4 opacity-50">📊</div>
+              <p className="text-lg font-medium text-muted-foreground mb-2">No traffic data yet</p>
+              <p className="text-sm text-muted-foreground/70">Data will appear here once visitors start browsing your site</p>
             </div>
           </div>
         )}
